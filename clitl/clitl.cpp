@@ -3,13 +3,3 @@
 
 #include "stdafx.h"
 
-namespace clitl
-{
-	class cliout {
-	public:
-	};
-
-	class cliin {
-	public:
-	};
-}

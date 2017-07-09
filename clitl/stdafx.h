@@ -3,6 +3,8 @@
 // are changed infrequently
 //
 
+#if WIN32
+
 #pragma once
 
 #include "targetver.h"
@@ -11,6 +13,6 @@
 // Windows Header Files:
 #include <windows.h>
 
-
+#endif
 
 // TODO: reference additional headers your program requires here
