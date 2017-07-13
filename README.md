@@ -1,2 +1,2 @@
-# clitl
-Cross-platform CLI template library
+# cli
+Cross-platform CLI library
