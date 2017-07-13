@@ -22,10 +22,14 @@ namespace clitl
 		typename traits = std::char_traits<charT> >
 		class CLITLDLL_API basic_outbuf : public std::basic_streambuf<charT, traits>
 	{
+	protected:
+		void test(void);
 	};
 
 	typedef basic_outbuf<char> outbuf;
 	typedef basic_outbuf<wchar_t> woutbuf;
 }
+
+void CLITLDLL_API test(void);
 
 #endif
