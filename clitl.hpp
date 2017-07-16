@@ -6,14 +6,53 @@
 #include <locale>
 #include <utility>
 
+#ifdef UNIX
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
+#elif WIN32
+#include <conio.h>
+#include <Windows.h>
+#endif
+
 namespace clitl {
-    /* Basic definitions and classes */
+    /* Basic definitions and containers */
     typedef int coord_t;
+    typedef int colornum_t;
 
     template <typename T>
-    class rect {
+    struct rect {
         std::pair<T, T> origin;
         std::pair<T, T> endpoint;
+    };
+
+    /* Color class */
+    class color {
+        colornum_t colornum;
+    public:
+        enum {
+#if UNIX
+            VOIDSPACE = -1,
+            DEFAULT = 0,
+            BLACK = 30,
+            RED = 31,
+            GREEN = 32,
+            BROWN = 33,
+            BLUE = 34,
+            MAGENTA = 35,
+            CYAN = 36,
+#elif WIN32
+            VOIDSPACE = -1,
+            DEFAULT = 7,
+            BLACK = 0,
+            RED = 4,
+            GREEN = 2,
+            BROWN = 7, // Worthless
+            BLUE = 1,
+            MAGENTA = 7, // Worthless
+            CYAN = 9,
+#endif
+        };
     };
 
     /* Output buffer */
@@ -36,6 +75,12 @@ namespace clitl {
     /* Output stream */
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_ostream : public std::basic_ostream<charT, traits> {
+#ifdef UNIX
+        static struct winsize wsize;
+#endif
+#ifdef WIN32
+        static HANDLE termout_handle;
+#endif
     public:
         explicit basic_ostream(basic_outbuf<charT, traits>* sb)
             : std::basic_ostream<charT, traits>(sb)
@@ -53,6 +98,15 @@ namespace clitl {
             return std::pair<coord_t, coord_t>(0, 0);
         }
     };
+
+#ifdef UNIX
+    template <typename charT, typename traits = std::char_traits<charT> >
+    struct winsize basic_ostring<charT, traits>::wsize = { 0 };
+#endif
+#ifdef WIN32
+    template <typename charT, typename traits = std::char_traits<charT> >
+    HANDLE basic_ostream<charT, traits>::termout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
 
     template <typename charT, typename traits = std::char_traits<charT> >
     basic_ostream<charT, traits> clear(const basic_ostream<charT, traits>& os)
