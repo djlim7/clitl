@@ -133,7 +133,6 @@ namespace clitl {
 #ifdef UNIX
         cout << "\033[?25h";           // Show cursor
         cout << "\033[?1049l";         // Use normal screen buffer
-            // Get the terminal size
 #elif WIN32
         CONSOLE_CURSOR_INFO windows_termout_curinfo;
         GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
