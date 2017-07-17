@@ -97,6 +97,12 @@ namespace clitl {
         {
             return std::pair<coord_t, coord_t>(0, 0);
         }
+
+        basic_ostream<charT, traits>& operator<<
+            (basic_ostream<charT, traits>& (*op)(basic_ostream<charT, traits>&))
+        {
+            return (*op)(*this);
+        }
     };
 
 #ifdef UNIX
@@ -108,16 +114,28 @@ namespace clitl {
     HANDLE basic_ostream<charT, traits>::termout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 
-    template <typename charT, typename traits = std::char_traits<charT> >
-    basic_ostream<charT, traits> clear(const basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
     {
-
+        return os;
     }
 
-    template <typename charT, typename traits = std::char_traits<charT> >
-    basic_ostream<charT, traits> refresh(const basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
+        return os;
+    }
 
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& clear(basic_ostream<charT, traits>& os)
+    {
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& refresh(basic_ostream<charT, traits>& os)
+    {
+        return os;
     }
 
     typedef basic_ostream<char> ostream;
