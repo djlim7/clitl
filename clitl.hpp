@@ -16,6 +16,31 @@
 #endif
 
 namespace clitl {
+    /* Color class */
+    enum class scolor {
+#ifdef UNIX
+        VOIDSPACE = -1,
+        DEFAULT = 0,
+        BLACK = 30,
+        RED = 31,
+        GREEN = 32,
+        BROWN = 33,
+        BLUE = 34,
+        MAGENTA = 35,
+        CYAN = 36,
+#elif WIN32
+        VOIDSPACE = -1,
+        DEFAULT = 7,
+        BLACK = 0,
+        RED = 4,
+        GREEN = 2,
+        BROWN = 7, // Worthless
+        BLUE = 1,
+        MAGENTA = 7, // Worthless
+        CYAN = 9,
+#endif
+    };
+
     /* Basic definitions and containers */
     typedef int coord_t;
     typedef int colornum_t;
@@ -24,35 +49,6 @@ namespace clitl {
     struct rect {
         std::pair<T, T> origin;
         std::pair<T, T> endpoint;
-    };
-
-    /* Color class */
-    class color {
-        colornum_t colornum;
-    public:
-        enum {
-#if UNIX
-            VOIDSPACE = -1,
-            DEFAULT = 0,
-            BLACK = 30,
-            RED = 31,
-            GREEN = 32,
-            BROWN = 33,
-            BLUE = 34,
-            MAGENTA = 35,
-            CYAN = 36,
-#elif WIN32
-            VOIDSPACE = -1,
-            DEFAULT = 7,
-            BLACK = 0,
-            RED = 4,
-            GREEN = 2,
-            BROWN = 7, // Worthless
-            BLUE = 1,
-            MAGENTA = 7, // Worthless
-            CYAN = 9,
-#endif
-        };
     };
 
     /* Output buffer */
@@ -75,13 +71,13 @@ namespace clitl {
     /* Output stream */
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_ostream : public std::basic_ostream<charT, traits> {
+    public:
 #ifdef UNIX
         static struct winsize wsize;
 #endif
 #ifdef WIN32
         static HANDLE termout_handle;
 #endif
-    public:
         explicit basic_ostream(basic_outbuf<charT, traits>* sb)
             : std::basic_ostream<charT, traits>(sb)
         {
@@ -117,12 +113,33 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
     {
+#ifdef UNIX
+        cout << "\033[?25l"; // Hide cursor
+        cout << "\033[?1049h"; // Use alternate screen buffer
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &(basic_ostream<charT, traits>::wsize));
+            // Get the terminal size
+#elif WIN32
+        CONSOLE_CURSOR_INFO windows_termout_curinfo;
+        GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+        windows_termout_curinfo.bVisible = 0;
+        SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+#endif
         return os;
     }
 
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
+#ifdef UNIX
+        cout << "\033[?25h";           // Show cursor
+        cout << "\033[?1049l";         // Use normal screen buffer
+            // Get the terminal size
+#elif WIN32
+        CONSOLE_CURSOR_INFO windows_termout_curinfo;
+        GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+        windows_termout_curinfo.bVisible = 1;
+        SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+#endif
         return os;
     }
 
