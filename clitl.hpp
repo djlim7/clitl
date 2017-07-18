@@ -91,8 +91,14 @@ namespace clitl {
 #endif
         }
 
-        basic_ostream<charT, traits>& moveto(const std::pair<coord_t, coord_t>& cord)
+        basic_ostream<charT, traits>& moveto(const std::pair<coord_t, coord_t>& coord)
         {
+#ifdef TARGET_IS_POSIX
+            cout << "\033[" << coord.second << ";" << coord.first << "f";
+#elif WIN32
+            COORD pos = { static_cast<SHORT>(coord.first), static_cast<SHORT>(coord.second) };
+            SetConsoleCursorPosition(termout_handle, pos);
+#endif
             return *this;
         }
 
