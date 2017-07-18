@@ -17,7 +17,7 @@
 
 namespace clitl {
     /* Color class */
-    enum class scolor {
+    enum class color {
 #ifdef UNIX
         VOIDSPACE = -1,
         DEFAULT = 0,
@@ -49,6 +49,7 @@ namespace clitl {
     struct rect {
         std::pair<T, T> origin;
         std::pair<T, T> endpoint;
+        color foreground;
     };
 
     /* Output buffer */
@@ -89,9 +90,22 @@ namespace clitl {
             return *this;
         }
 
-        std::pair<coord_t, coord_t> ssize()
+        std::pair<coord_t, coord_t> screensize()
         {
-            return std::pair<coord_t, coord_t>(0, 0);
+            static coord_t column;
+            static coord_t row;
+
+#ifdef UNIX
+            column = wsize.ws_col;
+            row = wsize.ws_row;
+#elif WIN32
+            CONSOLE_SCREEN_BUFFER_INFO termout_sbufinfo;
+            GetConsoleScreenBufferInfo(termout_handle, &termout_sbufinfo);
+            column = static_cast<coord_t>(termout_sbufinfo.dwSize.X);
+            row = static_cast<coord_t>(termout_sbufinfo.dwSize.Y);
+#endif
+
+            return std::pair<coord_t, coord_t>(column, row);
         }
 
         basic_ostream<charT, traits>& operator<<
@@ -139,6 +153,23 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& clear(basic_ostream<charT, traits>& os)
     {
+#ifdef UNIX
+        cout << "\033[2J";
+#elif WIN32
+        CONSOLE_SCREEN_BUFFER_INFO termout_sbufinfo;
+        COORD startpoint = { 0, 0 };
+        DWORD dw;
+
+        GetConsoleScreenBufferInfo(basic_ostream<charT, traits>::termout_handle,
+            &termout_sbufinfo);
+        FillConsoleOutputCharacterA(basic_ostream<charT, traits>::termout_handle, ' ',
+            termout_sbufinfo.dwSize.X * termout_sbufinfo.dwSize.Y,
+            startpoint, &dw);
+        FillConsoleOutputAttribute(basic_ostream<charT, traits>::termout_handle,
+            FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+            termout_sbufinfo.dwSize.X * termout_sbufinfo.dwSize.Y,
+            startpoint, &dw);
+#endif
         return os;
     }
 
@@ -148,10 +179,10 @@ namespace clitl {
 #ifdef UNIX
         cout << "\033[?25l"; // Hide cursor
 #elif WIN32
-    CONSOLE_CURSOR_INFO windows_termout_curinfo;
-    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
-    windows_termout_curinfo.bVisible = 0;
-    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+    CONSOLE_CURSOR_INFO termout_curinfo;
+    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &termout_curinfo);
+    termout_curinfo.bVisible = 0;
+    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &termout_curinfo);
 #endif
         return os;
     }
@@ -160,7 +191,7 @@ namespace clitl {
     basic_ostream<charT, traits>& normal_system_screenbuffer(basic_ostream<charT, traits>& os)
     {
 #if UNIX
-        cout << "\033[?1049l";         // Use normal screen buffer
+        cout << "\033[?1049l"; // Use normal screen buffer
 #endif
         return os;
     }
@@ -168,6 +199,7 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& refresh(basic_ostream<charT, traits>& os)
     {
+        fflush(stdout);
         return os;
     }
 
@@ -177,10 +209,10 @@ namespace clitl {
 #if UNIX
         cout << "\033[?25h"; // Show cursor
 #elif WIN32
-    CONSOLE_CURSOR_INFO windows_termout_curinfo;
-    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
-    windows_termout_curinfo.bVisible = 1;
-    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+    CONSOLE_CURSOR_INFO termout_curinfo;
+    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &termout_curinfo);
+    termout_curinfo.bVisible = 1;
+    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &termout_curinfo);
 #endif
         return os;
     }
