@@ -126,6 +126,9 @@ namespace clitl {
         }
     };
 
+    typedef basic_ostream<char> ostream;
+    typedef basic_ostream<wchar_t> wostream;
+
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
     {
@@ -161,16 +164,13 @@ namespace clitl {
         COORD startpoint = { 0, 0 };
         DWORD dw;
 
-        GetConsoleScreenBufferInfo(os.termout_handle,
-            &os.termout_sbufinfo);
+        GetConsoleScreenBufferInfo(os.termout_handle, &os.termout_sbufinfo);
         FillConsoleOutputCharacterA(os.termout_handle, ' ',
-            os.termout_sbufinfo.dwSize.X *
-            os.termout_sbufinfo.dwSize.Y,
+            os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
         FillConsoleOutputAttribute(os.termout_handle,
             FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-            os.termout_sbufinfo.dwSize.X *
-            os.termout_sbufinfo.dwSize.Y,
+            os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
 #endif
         return os;
@@ -182,11 +182,9 @@ namespace clitl {
 #ifdef UNIX
         cout << "\033[?25l"; // Hide cursor
 #elif WIN32
-    GetConsoleCursorInfo(os.termout_handle,
-        &os.termout_curinfo);
+    GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
     os.termout_curinfo.bVisible = 0;
-    SetConsoleCursorInfo(os.termout_handle,
-        &os.termout_curinfo);
+    SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
 #endif
         return os;
     }
@@ -220,9 +218,6 @@ namespace clitl {
 #endif
         return os;
     }
-
-    typedef basic_ostream<char> ostream;
-    typedef basic_ostream<wchar_t> wostream;
 
     /* Input buffer */
 
