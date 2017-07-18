@@ -113,31 +113,25 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
     {
-#ifdef UNIX
-        cout << "\033[?25l"; // Hide cursor
-        cout << "\033[?1049h"; // Use alternate screen buffer
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &(basic_ostream<charT, traits>::wsize));
-            // Get the terminal size
-#elif WIN32
-        CONSOLE_CURSOR_INFO windows_termout_curinfo;
-        GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
-        windows_termout_curinfo.bVisible = 0;
-        SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
-#endif
+        os << alternative_system_screenbuffer;
+        os << hide_cursor;
+        os << clear;
         return os;
     }
 
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
-#ifdef UNIX
-        cout << "\033[?25h";           // Show cursor
-        cout << "\033[?1049l";         // Use normal screen buffer
-#elif WIN32
-        CONSOLE_CURSOR_INFO windows_termout_curinfo;
-        GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
-        windows_termout_curinfo.bVisible = 1;
-        SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+        os << normal_system_screenbuffer;
+        os << show_cursor;
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& alternative_system_screenbuffer(basic_ostream<charT, traits>& os)
+    {
+#if UNIX
+        cout << "\033[?1049h"; // Use alternate screen buffer
 #endif
         return os;
     }
@@ -149,8 +143,45 @@ namespace clitl {
     }
 
     template <typename charT, typename traits>
+    basic_ostream<charT, traits>& hide_cursor(basic_ostream<charT, traits>& os)
+    {
+#ifdef UNIX
+        cout << "\033[?25l"; // Hide cursor
+#elif WIN32
+    CONSOLE_CURSOR_INFO windows_termout_curinfo;
+    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+    windows_termout_curinfo.bVisible = 0;
+    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+#endif
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& normal_system_screenbuffer(basic_ostream<charT, traits>& os)
+    {
+#if UNIX
+        cout << "\033[?1049l";         // Use normal screen buffer
+#endif
+        return os;
+    }
+
+    template <typename charT, typename traits>
     basic_ostream<charT, traits>& refresh(basic_ostream<charT, traits>& os)
     {
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& show_cursor(basic_ostream<charT, traits>& os)
+    {
+#if UNIX
+        cout << "\033[?25h"; // Show cursor
+#elif WIN32
+    CONSOLE_CURSOR_INFO windows_termout_curinfo;
+    GetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+    windows_termout_curinfo.bVisible = 1;
+    SetConsoleCursorInfo(basic_ostream<charT, traits>::termout_handle, &windows_termout_curinfo);
+#endif
         return os;
     }
 
