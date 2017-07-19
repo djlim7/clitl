@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <iosfwd>
 #include <locale>
+#include <string>
 #include <utility>
 
 #ifdef UNIX
@@ -49,6 +50,14 @@ namespace clitl {
     struct rect {
         std::pair<T, T> origin;
         std::pair<T, T> endpoint;
+        color foreground;
+    };
+
+    template <typename charT,
+        class traits = char_traits<charT>,
+        class Alloc = allocator<charT> >
+    struct colorstring {
+        std::basic_string<charT, traits, Alloc> str;
         color foreground;
     };
 
@@ -215,6 +224,25 @@ namespace clitl {
     GetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
     termout_curinfo.bVisible = 1;
     SetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
+#endif
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& operator<<
+        (basic_ostream<charT, traits>& os, const std::pair<std::string, color> tu)
+    {
+#ifdef UNIX
+        cout << "\033[" << static_cast<coord_t>(std::get<1>(tu)) << "m" << std::get<0>(tu).c_str() << "\033[0m";
+#elif WIN32
+        WORD termout_attribute;
+
+        GetConsoleScreenBufferInfo(os.termout_handle, &os.termout_sbufinfo);
+        termout_attribute = os.termout_sbufinfo.wAttributes;
+
+        SetConsoleTextAttribute(os.termout_handle, static_cast<coord_t>(std::get<1>(tu)));
+        os << std::get<0>(tu);
+        SetConsoleTextAttribute(os.termout_handle, termout_attribute);
 #endif
         return os;
     }
