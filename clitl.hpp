@@ -52,11 +52,15 @@ namespace clitl {
         std::pair<T, T> endpoint;
         color foreground;
     public:
-        rect() : origin(0), endpoint(0), foreground(color::DEFAULT) {}
-        rect(const std::pair<T, T>& origin,
+        explicit rect(const std::pair<T, T>& origin,
             const std::pair<T, T>& endpoint,
             const color& foreground)
             : origin(origin), endpoint(endpoint), foreground(foreground) {}
+        explicit rect(const std::pair<T, T>& origin,
+            const std::pair<T, T>& endpoint)
+            : rect(origin, endpoint, color::DEFAULT) {}
+        explicit rect() : rect(std::pair<T, T>(0, 0),
+            std::pair<T, T>(0, 0), color::DEFAULT) {}
 
         rect<T>& set_origin(const std::pair<T, T>& coord)
         {
@@ -286,6 +290,14 @@ namespace clitl {
         SetConsoleTextAttribute(os.termout_handle, termout_attribute);
 #endif
         return os;
+    }
+
+    template <typename charT, typename traits, typename Alloc, typename coordT>
+    basic_ostream<charT, traits>& operator<<
+        (basic_ostream<charT, traits>& os,
+            const std::pair<std::basic_string<charT, traits, Alloc>, rect<coordT> >& pr)
+    {
+
     }
 
     /* Input buffer */
