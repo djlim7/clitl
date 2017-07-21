@@ -47,10 +47,49 @@ namespace clitl {
     typedef int colornum_t;
 
     template <typename T>
-    struct rect {
+    class rect {
         std::pair<T, T> origin;
         std::pair<T, T> endpoint;
         color foreground;
+    public:
+        rect() : origin(0), endpoint(0), foreground(color::DEFAULT) {}
+        rect(const std::pair<T, T>& origin,
+            const std::pair<T, T>& endpoint,
+            const color& foreground)
+            : origin(origin), endpoint(endpoint), foreground(foreground) {}
+
+        rect<T>& set_origin(const std::pair<T, T>& coord)
+        {
+            origin = coord;
+            return *this;
+        }
+
+        rect<T>& set_endpoint(const std::pair<T, T>& coord)
+        {
+            endpoint = coord;
+            return *this;
+        }
+
+        rect<T>& set_foreground(const color& foreg)
+        {
+            foreground = foreg;
+            return *this;
+        }
+
+        const std::pair<T, T>& get_origin()
+        {
+            return origin;
+        }
+
+        const std::pair<T, T>& get_endpoint()
+        {
+            return endpoint;
+        }
+
+        const color& get_foreground()
+        {
+            return foreground;
+        }
     };
 
     template <typename charT,
@@ -228,12 +267,14 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
+    template <typename charT, typename traits, typename Alloc>
     basic_ostream<charT, traits>& operator<<
-        (basic_ostream<charT, traits>& os, const std::pair<std::string, color> tu)
+        (basic_ostream<charT, traits>& os,
+            const std::pair<std::basic_string<charT, traits, Alloc>, color>& tu)
     {
 #ifdef UNIX
-        cout << "\033[" << static_cast<coord_t>(std::get<1>(tu)) << "m" << std::get<0>(tu).c_str() << "\033[0m";
+        os << "\033[" << static_cast<coord_t>(std::get<1>(tu))
+            << "m" << std::get<0>(tu).c_str() << "\033[0m";
 #elif WIN32
         WORD termout_attribute;
 
