@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <locale>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #ifdef UNIX
@@ -62,35 +63,35 @@ namespace clitl {
         explicit rect() : rect(std::pair<T, T>(0, 0),
             std::pair<T, T>(0, 0), color::DEFAULT) {}
 
-        rect<T>& set_origin(const std::pair<T, T>& coord)
+        const rect<T>& set_origin(const std::pair<T, T>& coord)
         {
             origin = coord;
             return *this;
         }
 
-        rect<T>& set_endpoint(const std::pair<T, T>& coord)
+        const rect<T>& set_endpoint(const std::pair<T, T>& coord)
         {
             endpoint = coord;
             return *this;
         }
 
-        rect<T>& set_foreground(const color& foreg)
+        const rect<T>& set_foreground(const color& foreg)
         {
             foreground = foreg;
             return *this;
         }
 
-        const std::pair<T, T>& get_origin()
+        const std::pair<T, T>& get_origin() const
         {
             return origin;
         }
 
-        const std::pair<T, T>& get_endpoint()
+        const std::pair<T, T>& get_endpoint() const
         {
             return endpoint;
         }
 
-        const color& get_foreground()
+        const color& get_foreground() const
         {
             return foreground;
         }
@@ -274,7 +275,7 @@ namespace clitl {
     template <typename charT, typename traits, typename Alloc>
     basic_ostream<charT, traits>& operator<<
         (basic_ostream<charT, traits>& os,
-            const std::pair<std::basic_string<charT, traits, Alloc>, color>& tu)
+            const std::tuple<std::basic_string<charT, traits, Alloc>, color>& tu)
     {
 #ifdef UNIX
         os << "\033[" << static_cast<coord_t>(std::get<1>(tu))
@@ -292,12 +293,18 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits, typename Alloc, typename coordT>
+    template <typename charT, typename traits, typename coordT>
     basic_ostream<charT, traits>& operator<<
-        (basic_ostream<charT, traits>& os,
-            const std::pair<std::basic_string<charT, traits, Alloc>, rect<coordT> >& pr)
+        (basic_ostream<charT, traits>& os, const rect<coordT>& re)
     {
-
+        for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
+            for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
+                os.moveto(std::pair<coord_t, coord_t>(i, j));
+                os << std::tuple<std::basic_string<charT>, color>
+                    ("@", re.get_foreground());
+            }
+        }
+        return os;
     }
 
     /* Input buffer */
