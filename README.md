@@ -29,8 +29,8 @@ int main()
     cliout << clitl::post_process;
 }
 ```
-```
 Output:
+```
 
   @@@@@@
   @@@@@@
