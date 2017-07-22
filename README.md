@@ -8,7 +8,9 @@ It works with Windows Command Prompt and Bash.
 
 ## Install
 Add this repository as a submodule at your project's repository.
-    $ git submodule add https://github.com/pauis/clitl.git
+```
+$ git submodule add https://github.com/pauis/clitl.git
+```
 
 ## Demo
 ```C++
