@@ -149,7 +149,7 @@ namespace clitl {
 #ifdef UNIX
             *this << "\033[" << coord.second << ";" << coord.first << "f";
 #elif WIN32
-            COORD pos = { static_cast<SHORT>(coord.first), static_cast<SHORT>(coord.second) };
+            COORD pos = { static_cast<SHORT>(coord.first) - 1, static_cast<SHORT>(coord.second) - 1 };
             SetConsoleCursorPosition(termout_handle, pos);
 #endif
             return *this;
