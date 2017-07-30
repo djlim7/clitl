@@ -21,8 +21,8 @@ int main()
     clitl::outbuf obuf;
     clitl::ostream cliout(&obuf);
 
-    clitl::rect<clitl::coord_t> rec(std::pair<clitl::coord_t, clitl::coord_t>(2, 1),
-        std::pair<clitl::coord_t, clitl::coord_t>(7, 3), clitl::color::CYAN);
+    clitl::rect<clitl::coord_t> rec(std::pair<clitl::coord_t, clitl::coord_t>(3, 2),
+        std::pair<clitl::coord_t, clitl::coord_t>(8, 4), clitl::color::CYAN);
 
     cliout << clitl::pre_process;
     cliout << rec;
