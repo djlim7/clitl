@@ -2,8 +2,8 @@
 #define __CLITL_HPP__
 
 #include <cstdio>
-#include <iosfwd>
 #include <locale>
+#include <ostream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -98,8 +98,8 @@ namespace clitl {
     };
 
     template <typename charT,
-        class traits = char_traits<charT>,
-        class Alloc = allocator<charT> >
+        typename traits = std::char_traits<charT>,
+        typename Alloc = std::allocator<charT> >
     struct colorstring {
         std::basic_string<charT, traits, Alloc> str;
         color foreground;
@@ -146,8 +146,8 @@ namespace clitl {
 
         basic_ostream<charT, traits>& moveto(const std::pair<coord_t, coord_t>& coord)
         {
-#ifdef TARGET_IS_POSIX
-            cout << "\033[" << coord.second << ";" << coord.first << "f";
+#ifdef UNIX
+            *this << "\033[" << coord.second << ";" << coord.first << "f";
 #elif WIN32
             COORD pos = { static_cast<SHORT>(coord.first), static_cast<SHORT>(coord.second) };
             SetConsoleCursorPosition(termout_handle, pos);
@@ -183,27 +183,10 @@ namespace clitl {
     typedef basic_ostream<wchar_t> wostream;
 
     template <typename charT, typename traits>
-    basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
-    {
-        os << alternative_system_screenbuffer;
-        os << hide_cursor;
-        os << clear;
-        return os;
-    }
-
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
-    {
-        os << normal_system_screenbuffer;
-        os << show_cursor;
-        return os;
-    }
-
-    template <typename charT, typename traits>
     basic_ostream<charT, traits>& alternative_system_screenbuffer(basic_ostream<charT, traits>& os)
     {
 #if UNIX
-        cout << "\033[?1049h"; // Use alternate screen buffer
+        os << "\033[?1049h"; // Use alternate screen buffer
 #endif
         return os;
     }
@@ -212,7 +195,7 @@ namespace clitl {
     basic_ostream<charT, traits>& clear(basic_ostream<charT, traits>& os)
     {
 #ifdef UNIX
-        cout << "\033[2J";
+        os << "\033[2J";
 #elif WIN32
         COORD startpoint = { 0, 0 };
         DWORD dw;
@@ -233,7 +216,7 @@ namespace clitl {
     basic_ostream<charT, traits>& hide_cursor(basic_ostream<charT, traits>& os)
     {
 #ifdef UNIX
-        cout << "\033[?25l"; // Hide cursor
+        os << "\033[?25l"; // Hide cursor
 #elif WIN32
     GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
     os.termout_curinfo.bVisible = 0;
@@ -246,7 +229,7 @@ namespace clitl {
     basic_ostream<charT, traits>& normal_system_screenbuffer(basic_ostream<charT, traits>& os)
     {
 #if UNIX
-        cout << "\033[?1049l"; // Use normal screen buffer
+        os << "\033[?1049l"; // Use normal screen buffer
 #endif
         return os;
     }
@@ -262,13 +245,30 @@ namespace clitl {
     basic_ostream<charT, traits>& show_cursor(basic_ostream<charT, traits>& os)
     {
 #if UNIX
-        cout << "\033[?25h"; // Show cursor
+        os << "\033[?25h"; // Show cursor
 #elif WIN32
     CONSOLE_CURSOR_INFO termout_curinfo;
     GetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
     termout_curinfo.bVisible = 1;
     SetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
 #endif
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
+    {
+        os << alternative_system_screenbuffer;
+        os << hide_cursor;
+        os << clear;
+        return os;
+    }
+
+    template <typename charT, typename traits>
+    basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
+    {
+        os << normal_system_screenbuffer;
+        os << show_cursor;
         return os;
     }
 
