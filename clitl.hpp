@@ -45,7 +45,7 @@ namespace clitl {
 
     /* Basic definitions and containers */
     typedef int coord_t;
-    typedef int colornum_t;
+    //typedef int colornum_t;
 
     template <typename coordT, typename charT,
         typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
@@ -224,6 +224,22 @@ namespace clitl {
             return std::pair<coord_t, coord_t>(column, row);
         }
 
+        basic_ostream<charT, traits>& paintmode(color fgd, color bgd)
+        {
+#ifdef UNIX
+            os << "\033["
+                << static_cast<int>(30 + fgd)
+                << ";"
+                << static_cast<int>(40 + bwd)
+                << "m" << ;
+#elif WIN32
+            SetConsoleTextAttribute(this->termout_handle,
+                static_cast<WORD>(static_cast<int>(fgd)
+                    + 0x10 * static_cast<int>(bgd)));
+#endif
+            return *this;
+        }
+
         basic_ostream<charT, traits>& operator<<
             (basic_ostream<charT, traits>& (*op)(basic_ostream<charT, traits>&))
         {
@@ -319,6 +335,9 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
+        os << clear;
+        os.moveto(std::pair<coord_t, coord_t>(1, 1));
+        os.paintmode(color::WHITE, color::BLACK);
         os << normal_system_screenbuffer;
         os << show_cursor;
         return os;
@@ -329,31 +348,8 @@ namespace clitl {
         (basic_ostream<charT, traits>& os,
             const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
-#ifdef UNIX
-        os << "\033["
-            << static_cast<int>(30 + cs.get_foreground())
-            << ";"
-            << static_cast<int>(40 + cs.get_background())
-            << "m" << ;
-        /* Recovery code
-        os << "\033[0m";
-        */
-#elif WIN32
-        /* Recovery code
-        WORD termout_attribute;
-
-        GetConsoleScreenBufferInfo(os.termout_handle, &os.termout_sbufinfo);
-        termout_attribute = os.termout_sbufinfo.wAttributes;
-        */
-
-        SetConsoleTextAttribute(os.termout_handle,
-            static_cast<WORD>(static_cast<char>(cs.get_foreground())
-                + 0x10 * static_cast<char>(cs.get_background())));
+        os.paintmode(cs.get_foreground(), cs.get_background());
         os << cs.get_string().c_str();
-        /* Recovery code
-        SetConsoleTextAttribute(os.termout_handle, termout_attribute);
-        */
-#endif
         return os;
     }
 
