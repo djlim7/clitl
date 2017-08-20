@@ -1,4 +1,4 @@
-> Notice: This libaray is under development. Specific parts can be changed.
+﻿> Notice: This libaray is under development. Specific parts can be changed.
 
 # CLITL
 CLITL is a cross-platform C++ template library.
@@ -32,9 +32,9 @@ int main()
 Output:
 ```
 
-  @@@@@@
-  @@@@@@
-  @@@@@@
+  ██████
+  ██████
+  ██████
 ```
 
 ## Instruction

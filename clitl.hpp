@@ -131,7 +131,7 @@ namespace clitl {
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
             const color& background = color::WHITE)
             : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
-                std::basic_string<charT, traits, Alloc>(), color::DEFAULT, background) {}
+                std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
     };
 
     template <typename coordT, typename charT,
@@ -366,8 +366,6 @@ namespace clitl {
                 os.moveto(std::pair<coord_t, coord_t>(i, j));
                 os << coloredstring<coordT, charT, traits, Alloc>(
                     re.get_string(), re.get_foreground(), re.get_background());
-                //os << std::tuple<std::basic_string<charT>, color, color>
-                    ("@", re.get_foreground(), re.get_background());
             }
         }
         return os;
