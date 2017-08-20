@@ -21,25 +21,25 @@ namespace clitl {
     /* Color class */
     enum class color {
 #ifdef UNIX
-        VOIDSPACE = -1,
         DEFAULT = 0,
-        BLACK = 30,
-        RED = 31,
-        GREEN = 32,
-        BROWN = 33,
-        BLUE = 34,
-        MAGENTA = 35,
-        CYAN = 36,
-#elif WIN32
-        VOIDSPACE = -1,
-        DEFAULT = 7,
         BLACK = 0,
-        RED = 4,
+        RED = 1,
         GREEN = 2,
-        BROWN = 7, // Worthless
-        BLUE = 1,
-        MAGENTA = 7, // Worthless
-        CYAN = 9,
+        BROWN = 3,
+        BLUE = 4,
+        MAGENTA = 5,
+        CYAN = 6,
+        WHITE = 7,
+#elif WIN32
+        DEFAULT = 0x7,
+        BLACK = 0x0,
+        RED = 0x4,
+        GREEN = 0x2,
+        BROWN = 0x7, // Worthless
+        BLUE = 0x1,
+        MAGENTA = 0x7, // Worthless
+        CYAN = 0x9,
+        WHITE = 0x7,
 #endif
     };
 
@@ -47,62 +47,114 @@ namespace clitl {
     typedef int coord_t;
     typedef int colornum_t;
 
-    template <typename T>
-    class rect {
-        std::pair<T, T> origin;
-        std::pair<T, T> endpoint;
+    template <typename coordT, typename charT,
+        typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
+    class basic_cli_object {
+        std::pair<coordT, coordT> origin;
+        std::pair<coordT, coordT> endpoint;
+        std::basic_string<charT, traits, Alloc> str;
         color foreground;
+        color background;
     public:
-        explicit rect(const std::pair<T, T>& origin,
-            const std::pair<T, T>& endpoint,
-            const color& foreground)
-            : origin(origin), endpoint(endpoint), foreground(foreground) {}
-        explicit rect(const std::pair<T, T>& origin,
-            const std::pair<T, T>& endpoint)
-            : rect(origin, endpoint, color::DEFAULT) {}
-        explicit rect() : rect(std::pair<T, T>(0, 0),
-            std::pair<T, T>(0, 0), color::DEFAULT) {}
+        explicit basic_cli_object(
+            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(0, 0),
+            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
+            const std::basic_string<charT, traits, Alloc>& str
+                                            = std::basic_string<charT, traits, Alloc>(),
+            const color& foreground = clitl::color::WHITE,
+            const color& background = clitl::color::BLACK)
+            : origin(origin), endpoint(endpoint), str(str),
+                foreground(foreground), background(background) {}
 
-        const rect<T>& set_origin(const std::pair<T, T>& coord)
+        const basic_cli_object<coordT, charT>& set_origin(const std::pair<coordT, coordT>& coord)
         {
             origin = coord;
             return *this;
         }
 
-        const rect<T>& set_endpoint(const std::pair<T, T>& coord)
+        const basic_cli_object<coordT, charT>& set_endpoint(const std::pair<coordT, coordT>& coord)
         {
             endpoint = coord;
             return *this;
         }
 
-        const rect<T>& set_foreground(const color& foreg)
+        const basic_cli_object<coordT, charT>& set_string(const std::basic_string<charT, traits, Alloc>& stri)
+        {
+            str = stri;
+            return *this
+        }
+
+        const basic_cli_object<coordT, charT>& set_foreground(const color& foreg)
         {
             foreground = foreg;
             return *this;
         }
 
-        const std::pair<T, T>& get_origin() const
+        const basic_cli_object<coordT, charT>& set_background(const color& backg)
+        {
+            background = backg;
+            return *this;
+        }
+
+        const std::pair<coordT, coordT>& get_origin() const
         {
             return origin;
         }
 
-        const std::pair<T, T>& get_endpoint() const
+        const std::pair<coordT, coordT>& get_endpoint() const
         {
             return endpoint;
+        }
+
+        const std::basic_string<charT, traits, Alloc>& get_string() const
+        {
+            return str;
         }
 
         const color& get_foreground() const
         {
             return foreground;
         }
+
+        const color& get_background() const
+        {
+            return background;
+        }
     };
 
-    template <typename charT,
-        typename traits = std::char_traits<charT>,
-        typename Alloc = std::allocator<charT> >
-    struct colorstring {
-        std::basic_string<charT, traits, Alloc> str;
-        color foreground;
+    template <typename coordT, typename charT = char,
+        typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
+    class rect : public basic_cli_object<coordT, charT, traits, Alloc> {
+    public:
+        explicit rect(
+            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(0, 0),
+            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
+            const color& background = color::WHITE)
+            : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
+                std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
+    };
+
+    template <typename coordT, typename charT,
+        typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
+        class coloredstring : public basic_cli_object<coordT, charT, traits, Alloc> {
+    public:
+        explicit coloredstring(
+            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(0, 0),
+            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
+            const std::basic_string<charT, traits, Alloc>& str
+            = std::basic_string<charT, traits, Alloc>(),
+            const color& foreground = clitl::color::WHITE,
+            const color& background = clitl::color::BLACK)
+            : basic_cli_object<coordT, charT, traits, Alloc>(
+                origin, endpoint, str, foreground, background) {}
+        explicit coloredstring(
+            const std::basic_string<charT, traits, Alloc>& str
+            = std::basic_string<charT, traits, Alloc>(),
+            const color& foreground = clitl::color::WHITE,
+            const color& background = clitl::color::BLACK)
+            : basic_cli_object<coordT, charT, traits, Alloc>(
+                std::pair<coordT, coordT>(0, 0), std::pair<coordT, coordT>(0, 0),
+                str, foreground, background) {}
     };
 
     /* Output buffer */
@@ -237,7 +289,7 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& refresh(basic_ostream<charT, traits>& os)
     {
-        fflush(stdout);
+        std::fflush(stdout);
         return os;
     }
 
@@ -272,36 +324,48 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits, typename Alloc>
+    template <typename coordT, typename charT, typename traits, typename Alloc>
     basic_ostream<charT, traits>& operator<<
         (basic_ostream<charT, traits>& os,
-            const std::tuple<std::basic_string<charT, traits, Alloc>, color>& tu)
+            const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
 #ifdef UNIX
-        os << "\033[" << static_cast<coord_t>(std::get<1>(tu))
-            << "m" << std::get<0>(tu).c_str() << "\033[0m";
+        os << "\033["
+            << static_cast<int>(30 + cs.get_foreground())
+            << ";"
+            << static_cast<int>(40 + cs.get_background())
+            << "m" << ;
+        /* Recovery code
+        os << "\033[0m";
+        */
 #elif WIN32
+        /* Recovery code
         WORD termout_attribute;
 
         GetConsoleScreenBufferInfo(os.termout_handle, &os.termout_sbufinfo);
         termout_attribute = os.termout_sbufinfo.wAttributes;
+        */
 
-        SetConsoleTextAttribute(os.termout_handle, static_cast<coord_t>(std::get<1>(tu)));
-        os << std::get<0>(tu);
+        SetConsoleTextAttribute(os.termout_handle,
+            static_cast<WORD>(static_cast<char>(cs.get_foreground())
+                + 0x10 * static_cast<char>(cs.get_background())));
+        os << cs.get_string().c_str();
+        /* Recovery code
         SetConsoleTextAttribute(os.termout_handle, termout_attribute);
+        */
 #endif
         return os;
     }
 
-    template <typename charT, typename traits, typename coordT>
+    template <typename coordT, typename charT, typename traits, typename Alloc>
     basic_ostream<charT, traits>& operator<<
-        (basic_ostream<charT, traits>& os, const rect<coordT>& re)
+        (basic_ostream<charT, traits>& os, const rect<coordT, charT, traits, Alloc>& re)
     {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
                 os.moveto(std::pair<coord_t, coord_t>(i, j));
-                os << std::tuple<std::basic_string<charT>, color>
-                    ("@", re.get_foreground());
+                os << coloredstring<coordT, charT, traits, Alloc>(
+                    re.get_string(), re.get_foreground(), re.get_background());
             }
         }
         return os;
