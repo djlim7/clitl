@@ -61,8 +61,8 @@ namespace clitl {
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
             const std::basic_string<charT, traits, Alloc>& str
                                             = std::basic_string<charT, traits, Alloc>(),
-            const color& foreground = clitl::color::WHITE,
-            const color& background = clitl::color::BLACK)
+            const color& foreground = color::WHITE,
+            const color& background = color::BLACK)
             : origin(origin), endpoint(endpoint), str(str),
                 foreground(foreground), background(background) {}
 
@@ -81,7 +81,7 @@ namespace clitl {
         const basic_cli_object<coordT, charT>& set_string(const std::basic_string<charT, traits, Alloc>& stri)
         {
             str = stri;
-            return *this
+            return *this;
         }
 
         const basic_cli_object<coordT, charT>& set_foreground(const color& foreg)
@@ -227,11 +227,11 @@ namespace clitl {
         basic_ostream<charT, traits>& paintmode(color fgd, color bgd)
         {
 #ifdef UNIX
-            os << "\033["
-                << static_cast<int>(30 + fgd)
+            *this << "\033["
+                << 30 + static_cast<int>(fgd)
                 << ";"
-                << static_cast<int>(40 + bwd)
-                << "m" << ;
+                << 40 + static_cast<int>(bgd)
+                << "m";
 #elif WIN32
             SetConsoleTextAttribute(this->termout_handle,
                 static_cast<WORD>(static_cast<int>(fgd)
@@ -335,11 +335,11 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
+        os.paintmode(color::WHITE, color::BLACK);
         os << clear;
         os.moveto(std::pair<coord_t, coord_t>(1, 1));
-        os.paintmode(color::WHITE, color::BLACK);
-        os << normal_system_screenbuffer;
         os << show_cursor;
+        os << normal_system_screenbuffer;
         return os;
     }
 
