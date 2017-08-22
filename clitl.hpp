@@ -357,6 +357,7 @@ namespace clitl {
     {
         os.paintmode(color::WHITE, color::BLACK);
         os << clear;
+        os << show_cursor;
         os.movecursor(1, 1);
         os.paintmode(nullptr);
         os << normal_system_screenbuffer;
