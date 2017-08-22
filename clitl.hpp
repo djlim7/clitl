@@ -357,14 +357,8 @@ namespace clitl {
     {
         os.paintmode(color::WHITE, color::BLACK);
         os << clear;
-<<<<<<< HEAD
         os.movecursor(1, 1);
         os.paintmode(nullptr);
-        os << normal_system_screenbuffer;
-=======
-        os.moveto(std::pair<coord_t, coord_t>(1, 1));
->>>>>>> a206d886bf329637e614b895bbd220159d5bb11f
-        os << show_cursor;
         os << normal_system_screenbuffer;
         return os;
     }
