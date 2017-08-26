@@ -121,6 +121,14 @@ namespace clitl {
         {
             return background;
         }
+
+        basic_cli_object<coordT, charT, traits, Alloc> operator+
+            (const basic_cli_object<coordT, charT, traits, Alloc>& bco) const
+        {
+            return basic_cli_object<coordT, charT, traits, Alloc>
+                (std::pair<coordT, coordT>
+                (this->origin + bco.origin, this->endpoint + bco.endpoint));
+        }
     };
 
     template <typename coordT, typename charT = char,
@@ -128,8 +136,8 @@ namespace clitl {
     class rect : public basic_cli_object<coordT, charT, traits, Alloc> {
     public:
         explicit rect(
-            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(0, 0),
-            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
+            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
+            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
             const color& background = color::WHITE)
             : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
                 std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
@@ -140,8 +148,8 @@ namespace clitl {
         class coloredstring : public basic_cli_object<coordT, charT, traits, Alloc> {
     public:
         explicit coloredstring(
-            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(0, 0),
-            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
+            const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
+            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
             const std::basic_string<charT, traits, Alloc>& str
             = std::basic_string<charT, traits, Alloc>(),
             const color& foreground = clitl::color::WHITE,
@@ -154,7 +162,7 @@ namespace clitl {
             const color& foreground = clitl::color::WHITE,
             const color& background = clitl::color::BLACK)
             : basic_cli_object<coordT, charT, traits, Alloc>(
-                std::pair<coordT, coordT>(0, 0), std::pair<coordT, coordT>(0, 0),
+                std::pair<coordT, coordT>(1, 1), std::pair<coordT, coordT>(1, 1),
                 str, foreground, background) {}
     };
 
@@ -176,7 +184,8 @@ namespace clitl {
     typedef basic_outbuf<wchar_t> woutbuf;
 
     /* Output stream */
-    template <typename charT, typename traits = std::char_traits<charT> >
+    template <typename charT,
+        typename traits = std::char_traits<charT>, typename coordT = coord_t >
     class basic_ostream : public std::basic_ostream<charT, traits> {
     public:
 #ifdef UNIX
@@ -199,7 +208,7 @@ namespace clitl {
 #endif
         }
 
-        basic_ostream<charT, traits>& movecursor(coord_t xpos, coord_t ypos)
+        basic_ostream<charT, traits, coordT>& movecursor(coordT xpos, coordT ypos)
         {
 #ifdef UNIX
             *this << "\033[" << ypos << ";" << xpos << "f";
@@ -210,30 +219,30 @@ namespace clitl {
             return *this;
         }
 
-        basic_ostream<charT, traits>& movecursor(const std::pair<coord_t, coord_t>& coord)
+        basic_ostream<charT, traits, coordT>& movecursor(const std::pair<coordT, coordT>& coord)
         {
             movecursor(coord.first, coord.second);
             return *this;
         }
 
-        std::pair<coord_t, coord_t> screensize()
+        std::pair<coordT, coordT> screensize()
         {
-            static coord_t column;
-            static coord_t row;
+            static coordT column;
+            static coordT row;
 
 #ifdef UNIX
             column = wsize.ws_col;
             row = wsize.ws_row;
 #elif WIN32
             GetConsoleScreenBufferInfo(termout_handle, &termout_sbufinfo);
-            column = static_cast<coord_t>(termout_sbufinfo.dwSize.X);
-            row = static_cast<coord_t>(termout_sbufinfo.dwSize.Y);
+            column = static_cast<coordT>(termout_sbufinfo.dwSize.X);
+            row = static_cast<coordT>(termout_sbufinfo.dwSize.Y);
 #endif
 
-            return std::pair<coord_t, coord_t>(column, row);
+            return std::pair<coordT, coordT>(column, row);
         }
 
-        basic_ostream<charT, traits>& paintmode(color fgd, color bgd)
+        basic_ostream<charT, traits, coordT>& paintmode(color fgd, color bgd)
         {
 #ifdef UNIX
             *this << "\033["
@@ -249,7 +258,7 @@ namespace clitl {
             return *this;
         }
 
-        basic_ostream<charT, traits>& paintmode(nullptr_t nullp)
+        basic_ostream<charT, traits, coordT>& paintmode(nullptr_t nullp)
         {
             // Recovery mode
 #ifdef UNIX
@@ -260,8 +269,8 @@ namespace clitl {
             return *this;
         }
 
-        basic_ostream<charT, traits>& operator<<
-            (basic_ostream<charT, traits>& (*op)(basic_ostream<charT, traits>&))
+        basic_ostream<charT, traits, coordT>& operator<<
+            (basic_ostream<charT, traits, coordT>& (*op)(basic_ostream<charT, traits, coordT>&))
         {
             return (*op)(*this);
         }
@@ -270,8 +279,9 @@ namespace clitl {
     typedef basic_ostream<char> ostream;
     typedef basic_ostream<wchar_t> wostream;
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& alternative_system_screenbuffer(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        alternative_system_screenbuffer(basic_ostream<charT, traits, coordT>& os)
     {
 #if UNIX
         os << "\033[?1049h"; // Use alternate screen buffer
@@ -279,8 +289,9 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& clear(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        clear(basic_ostream<charT, traits, coordT>& os)
     {
 #ifdef UNIX
         os << "\033[2J";
@@ -300,8 +311,9 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& hide_cursor(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        hide_cursor(basic_ostream<charT, traits, coordT>& os)
     {
 #ifdef UNIX
         os << "\033[?25l"; // Hide cursor
@@ -313,8 +325,9 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& normal_system_screenbuffer(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        normal_system_screenbuffer(basic_ostream<charT, traits, coordT>& os)
     {
 #if UNIX
         os << "\033[?1049l"; // Use normal screen buffer
@@ -322,15 +335,17 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& refresh(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        refresh(basic_ostream<charT, traits, coordT>& os)
     {
         std::fflush(stdout);
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& show_cursor(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        show_cursor(basic_ostream<charT, traits, coordT>& os)
     {
 #if UNIX
         os << "\033[?25h"; // Show cursor
@@ -342,8 +357,9 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& pre_process(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        pre_process(basic_ostream<charT, traits, coordT>& os)
     {
         os << alternative_system_screenbuffer;
         os << hide_cursor;
@@ -351,8 +367,9 @@ namespace clitl {
         return os;
     }
 
-    template <typename charT, typename traits>
-    basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        post_process(basic_ostream<charT, traits, coordT>& os)
     {
         os << clear;
         os << show_cursor;
@@ -363,8 +380,8 @@ namespace clitl {
     }
 
     template <typename coordT, typename charT, typename traits, typename Alloc>
-    basic_ostream<charT, traits>& operator<<
-        (basic_ostream<charT, traits>& os,
+    basic_ostream<charT, traits, coordT>& operator<<
+        (basic_ostream<charT, traits, coordT>& os,
             const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
         os.paintmode(cs.get_foreground(), cs.get_background());
@@ -373,8 +390,8 @@ namespace clitl {
     }
 
     template <typename coordT, typename charT, typename traits, typename Alloc>
-    basic_ostream<charT, traits>& operator<<
-        (basic_ostream<charT, traits>& os, const rect<coordT, charT, traits, Alloc>& re)
+    basic_ostream<charT, traits, coordT>& operator<<
+        (basic_ostream<charT, traits, coordT>& os, const rect<coordT, charT, traits, Alloc>& re)
     {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
@@ -391,8 +408,9 @@ namespace clitl {
     /* Input stream */
     /* Keeping it for further update
 
-    template <typename charT, typename traits = std::char_traits<charT> >
-    class basic_istream : public std::basic_istream<charT, traits> {
+    template <typename charT,
+        typename traits = std::char_traits<charT>, typename coordT = coord_t >
+    class basic_istream : public std::basic_istream<charT, traits, coordT> {
         
     };
 
