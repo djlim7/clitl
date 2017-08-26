@@ -1,6 +1,7 @@
 #ifndef __CLITL_HPP__
 #define __CLITL_HPP__
 
+#include <cstddef>
 #include <cstdio>
 #include <locale>
 #include <ostream>
@@ -185,6 +186,7 @@ namespace clitl {
         HANDLE termout_handle;
         CONSOLE_CURSOR_INFO termout_curinfo;
         CONSOLE_SCREEN_BUFFER_INFO termout_sbufinfo;
+        CONSOLE_SCREEN_BUFFER_INFO termout_initial_sbufinfo;
 #endif
         explicit basic_ostream(basic_outbuf<charT, traits>* sb)
             : std::basic_ostream<charT, traits>(sb)
@@ -193,17 +195,24 @@ namespace clitl {
             wsize = { 0 };
 #elif WIN32
             termout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+            GetConsoleScreenBufferInfo(termout_handle, &termout_initial_sbufinfo);
 #endif
         }
 
-        basic_ostream<charT, traits>& moveto(const std::pair<coord_t, coord_t>& coord)
+        basic_ostream<charT, traits>& movecursor(coord_t xpos, coord_t ypos)
         {
 #ifdef UNIX
-            *this << "\033[" << coord.second << ";" << coord.first << "f";
+            *this << "\033[" << ypos << ";" << xpos << "f";
 #elif WIN32
-            COORD pos = { static_cast<SHORT>(coord.first) - 1, static_cast<SHORT>(coord.second) - 1 };
+            COORD pos = { static_cast<SHORT>(xpos) - 1, static_cast<SHORT>(ypos) - 1 };
             SetConsoleCursorPosition(termout_handle, pos);
 #endif
+            return *this;
+        }
+
+        basic_ostream<charT, traits>& movecursor(const std::pair<coord_t, coord_t>& coord)
+        {
+            movecursor(coord.first, coord.second);
             return *this;
         }
 
@@ -236,6 +245,17 @@ namespace clitl {
             SetConsoleTextAttribute(this->termout_handle,
                 static_cast<WORD>(static_cast<int>(fgd)
                     + 0x10 * static_cast<int>(bgd)));
+#endif
+            return *this;
+        }
+
+        basic_ostream<charT, traits>& paintmode(nullptr_t nullp)
+        {
+            // Recovery mode
+#ifdef UNIX
+            os << "\033[0m";
+#elif WIN32
+            SetConsoleTextAttribute(termout_handle, termout_initial_sbufinfo.wAttributes);
 #endif
             return *this;
         }
@@ -286,9 +306,9 @@ namespace clitl {
 #ifdef UNIX
         os << "\033[?25l"; // Hide cursor
 #elif WIN32
-    GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
-    os.termout_curinfo.bVisible = 0;
-    SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        os.termout_curinfo.bVisible = 0;
+        SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
 #endif
         return os;
     }
@@ -315,10 +335,9 @@ namespace clitl {
 #if UNIX
         os << "\033[?25h"; // Show cursor
 #elif WIN32
-    CONSOLE_CURSOR_INFO termout_curinfo;
-    GetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
-    termout_curinfo.bVisible = 1;
-    SetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
+        GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        os.termout_curinfo.bVisible = 1;
+        SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
 #endif
         return os;
     }
@@ -335,10 +354,10 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
-        os.paintmode(color::WHITE, color::BLACK);
         os << clear;
-        os.moveto(std::pair<coord_t, coord_t>(1, 1));
         os << show_cursor;
+        os.movecursor(1, 1);
+        os.paintmode(nullptr);
         os << normal_system_screenbuffer;
         return os;
     }
@@ -359,7 +378,7 @@ namespace clitl {
     {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
-                os.moveto(std::pair<coord_t, coord_t>(i, j));
+                os.movecursor(i, j);
                 os << coloredstring<coordT, charT, traits, Alloc>(
                     re.get_string(), re.get_foreground(), re.get_background());
             }
@@ -370,6 +389,8 @@ namespace clitl {
     /* Input buffer */
 
     /* Input stream */
+    /* Keeping it for further update
+
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_istream : public std::basic_istream<charT, traits> {
         
@@ -377,6 +398,7 @@ namespace clitl {
 
     typedef basic_istream<char> istream;
     typedef basic_istream<wchar_t> wistream;
+    */
 }
 
 #endif
