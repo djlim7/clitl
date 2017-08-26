@@ -306,9 +306,9 @@ namespace clitl {
 #ifdef UNIX
         os << "\033[?25l"; // Hide cursor
 #elif WIN32
-    GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
-    os.termout_curinfo.bVisible = 0;
-    SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        os.termout_curinfo.bVisible = 0;
+        SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
 #endif
         return os;
     }
@@ -335,10 +335,9 @@ namespace clitl {
 #if UNIX
         os << "\033[?25h"; // Show cursor
 #elif WIN32
-    CONSOLE_CURSOR_INFO termout_curinfo;
-    GetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
-    termout_curinfo.bVisible = 1;
-    SetConsoleCursorInfo(os.termout_handle, &termout_curinfo);
+        GetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
+        os.termout_curinfo.bVisible = 1;
+        SetConsoleCursorInfo(os.termout_handle, &os.termout_curinfo);
 #endif
         return os;
     }
@@ -355,7 +354,6 @@ namespace clitl {
     template <typename charT, typename traits>
     basic_ostream<charT, traits>& post_process(basic_ostream<charT, traits>& os)
     {
-        os.paintmode(color::WHITE, color::BLACK);
         os << clear;
         os << show_cursor;
         os.movecursor(1, 1);
@@ -391,6 +389,8 @@ namespace clitl {
     /* Input buffer */
 
     /* Input stream */
+    /* Keeping it for further update
+
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_istream : public std::basic_istream<charT, traits> {
         
@@ -398,6 +398,7 @@ namespace clitl {
 
     typedef basic_istream<char> istream;
     typedef basic_istream<wchar_t> wistream;
+    */
 }
 
 #endif
