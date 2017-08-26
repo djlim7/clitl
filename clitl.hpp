@@ -122,6 +122,28 @@ namespace clitl {
             return background;
         }
 
+        bool check_cover
+            (const basic_cli_object<coordT, charT, traits, Alloc>& bco) const
+        {
+            if (this->origin.first <= bco.origin.first
+                && this->endpoint.first >= bco.endpoint.first
+                && this->origin.second <= bco.origin.second
+                && this->endpoint.second >= bco.endpoint.second)
+                return true;
+            return false;
+        }
+
+        bool operator&&
+            (const basic_cli_object<coordT, charT, traits, Alloc>& bco) const
+        {
+            if (this->origin.first <= bco.endpoint.first
+                && this->endpoint.first >= bco.origin.first
+                && this->origin.second <= bco.endpoint.second
+                && this->endpoint.second >= bco.origin.second)
+                return true;
+            return false;
+        }
+
         basic_cli_object<coordT, charT, traits, Alloc> operator+
             (const basic_cli_object<coordT, charT, traits, Alloc>& bco) const
         {
