@@ -153,7 +153,7 @@ namespace clitl {
         }
     };
 
-    template <typename coordT, typename charT = char,
+    template <typename coordT = coord_t, typename charT = char,
         typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
     class rect : public basic_cli_object<coordT, charT, traits, Alloc> {
     public:
@@ -165,7 +165,7 @@ namespace clitl {
                 std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
     };
 
-    template <typename coordT, typename charT,
+    template <typename coordT = coord_t, typename charT = char,
         typename traits = std::char_traits<charT>, typename Alloc = std::allocator<charT> >
         class coloredstring : public basic_cli_object<coordT, charT, traits, Alloc> {
     public:
@@ -262,7 +262,7 @@ namespace clitl {
             row = static_cast<coordT>(termout_sbufinfo.dwSize.Y);
             */
 
-            column = 110;
+            column = 80;
             row = 28;
 #endif
 
