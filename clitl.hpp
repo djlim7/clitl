@@ -423,9 +423,7 @@ namespace clitl {
     {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
-                os.movecursor(i, j);
-                os << coloredstring<coordT, charT, traits, Alloc>(
-                    re.get_string(), re.get_foreground(), re.get_background());
+                os << coloredstring<coordT, charT, traits, Alloc>(re.get_origin(), re.get_string(), re.get_foreground(), re.get_background());
             }
         }
         return os;
