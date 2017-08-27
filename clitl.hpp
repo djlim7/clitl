@@ -262,7 +262,7 @@ namespace clitl {
             row = static_cast<coordT>(termout_sbufinfo.dwSize.Y);
             */
 
-            column = 110;
+            column = 80;
             row = 28;
 #endif
 
