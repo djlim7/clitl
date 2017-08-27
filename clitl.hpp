@@ -171,20 +171,20 @@ namespace clitl {
     public:
         explicit coloredstring(
             const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
-            const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
             const std::basic_string<charT, traits, Alloc>& str
             = std::basic_string<charT, traits, Alloc>(),
             const color& foreground = clitl::color::WHITE,
             const color& background = clitl::color::BLACK)
             : basic_cli_object<coordT, charT, traits, Alloc>(
-                origin, endpoint, str, foreground, background) {}
+                origin, std::pair<coordT, coordT>(origin.first + str.length() - 1, origin.second),
+                str, foreground, background) {}
         explicit coloredstring(
             const std::basic_string<charT, traits, Alloc>& str
             = std::basic_string<charT, traits, Alloc>(),
             const color& foreground = clitl::color::WHITE,
             const color& background = clitl::color::BLACK)
             : basic_cli_object<coordT, charT, traits, Alloc>(
-                std::pair<coordT, coordT>(1, 1), std::pair<coordT, coordT>(1, 1),
+                std::pair<coordT, coordT>(1, 1), std::pair<coordT, coordT>(1 + str.length() - 1, 1),
                 str, foreground, background) {}
     };
 
@@ -411,6 +411,7 @@ namespace clitl {
         (basic_ostream<charT, traits, coordT>& os,
             const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
+        os.movecursor(cs.get_origin());
         os.paintmode(cs.get_foreground(), cs.get_background());
         os << cs.get_string().c_str();
         return os;
