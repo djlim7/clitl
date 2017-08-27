@@ -256,9 +256,14 @@ namespace clitl {
             column = wsize.ws_col;
             row = wsize.ws_row;
 #elif WIN32
+            /* Real code
             GetConsoleScreenBufferInfo(termout_handle, &termout_sbufinfo);
             column = static_cast<coordT>(termout_sbufinfo.dwSize.X);
             row = static_cast<coordT>(termout_sbufinfo.dwSize.Y);
+            */
+
+            column = 110;
+            row = 28;
 #endif
 
             return std::pair<coordT, coordT>(column, row);
