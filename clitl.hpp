@@ -352,7 +352,7 @@ namespace clitl {
             os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
         FillConsoleOutputAttribute(os.termout_handle,
-            FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+            os.termout_initial_sbufinfo.wAttributes,
             os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
 #endif
