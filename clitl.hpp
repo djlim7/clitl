@@ -67,31 +67,36 @@ namespace clitl {
             : origin(origin), endpoint(endpoint), str(str),
                 foreground(foreground), background(background) {}
 
-        const basic_cli_object<coordT, charT>& set_origin(const std::pair<coordT, coordT>& coord)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_origin(const std::pair<coordT, coordT>& coord)
         {
             origin = coord;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_endpoint(const std::pair<coordT, coordT>& coord)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_endpoint(const std::pair<coordT, coordT>& coord)
         {
             endpoint = coord;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_string(const std::basic_string<charT, traits, Alloc>& stri)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_string(const std::basic_string<charT, traits, Alloc>& stri)
         {
             str = stri;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_foreground(const color& foreg)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_foreground(const color& foreg)
         {
             foreground = foreg;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_background(const color& backg)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_background(const color& backg)
         {
             background = backg;
             return *this;
@@ -429,7 +434,7 @@ namespace clitl {
     basic_ostream<charT, traits, coordT>& operator<<
         (basic_ostream<charT, traits, coordT>& os, const rect<coordT, charT, traits, Alloc>& re)
     {
-        rect<coordT, charT, traits, Alloc> temprec;
+        static rect<coordT, charT, traits, Alloc> temprec;
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
                 temprec = re;
