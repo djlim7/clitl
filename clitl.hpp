@@ -32,7 +32,7 @@ namespace clitl {
         CYAN = 6,
         WHITE = 7,
 #elif WIN32
-        DEFAULT = 0x7,
+        DEFAULT = -0x1,
         BLACK = 0x0,
         RED = 0x4,
         GREEN = 0x2,
@@ -283,6 +283,12 @@ namespace clitl {
                 << 40 + static_cast<int>(bgd)
                 << "m";
 #elif WIN32
+            if (color::DEFAULT == fgd) {
+                fgd = static_cast<color>(termout_initial_sbufinfo.wAttributes % 0x10);
+            }
+            if (color::DEFAULT == bgd) {
+                bgd = static_cast<color>((termout_initial_sbufinfo.wAttributes / 0x10) % 0x10);
+            }
             SetConsoleTextAttribute(this->termout_handle,
                 static_cast<WORD>(static_cast<int>(fgd)
                     + 0x10 * static_cast<int>(bgd)));
@@ -346,7 +352,7 @@ namespace clitl {
             os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
         FillConsoleOutputAttribute(os.termout_handle,
-            FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+            os.termout_initial_sbufinfo.wAttributes,
             os.termout_sbufinfo.dwSize.X * os.termout_sbufinfo.dwSize.Y,
             startpoint, &dw);
 #endif
