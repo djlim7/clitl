@@ -296,6 +296,16 @@ namespace clitl {
             return *this;
         }
 
+        basic_ostream<charT, traits, coordT>& draw
+            (const basic_cli_object<coordT, charT>& bco)
+        {
+            this->movecursor(bco.get_origin());
+            this->paintmode(bco.get_foreground(), bco.get_background());
+            *this << bco.get_string().c_str();
+
+            return *this;
+        }
+
         basic_ostream<charT, traits, coordT>& operator<<
             (basic_ostream<charT, traits, coordT>& (*op)(basic_ostream<charT, traits, coordT>&))
         {
@@ -411,9 +421,7 @@ namespace clitl {
         (basic_ostream<charT, traits, coordT>& os,
             const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
-        os.movecursor(cs.get_origin());
-        os.paintmode(cs.get_foreground(), cs.get_background());
-        os << cs.get_string().c_str();
+        os.draw(cs);
         return os;
     }
 
@@ -421,9 +429,12 @@ namespace clitl {
     basic_ostream<charT, traits, coordT>& operator<<
         (basic_ostream<charT, traits, coordT>& os, const rect<coordT, charT, traits, Alloc>& re)
     {
+        rect<coordT, charT, traits, Alloc> temprec;
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
-                os << coloredstring<coordT, charT, traits, Alloc>(re.get_origin(), re.get_string(), re.get_foreground(), re.get_background());
+                temprec = re;
+                temprec.set_origin(std::pair<coord_t, coord_t>(i, j));
+                os.draw(temprec);
             }
         }
         return os;
