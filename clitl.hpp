@@ -67,31 +67,36 @@ namespace clitl {
             : origin(origin), endpoint(endpoint), str(str),
                 foreground(foreground), background(background) {}
 
-        const basic_cli_object<coordT, charT>& set_origin(const std::pair<coordT, coordT>& coord)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_origin(const std::pair<coordT, coordT>& coord)
         {
             origin = coord;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_endpoint(const std::pair<coordT, coordT>& coord)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_endpoint(const std::pair<coordT, coordT>& coord)
         {
             endpoint = coord;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_string(const std::basic_string<charT, traits, Alloc>& stri)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_string(const std::basic_string<charT, traits, Alloc>& stri)
         {
             str = stri;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_foreground(const color& foreg)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_foreground(const color& foreg)
         {
             foreground = foreg;
             return *this;
         }
 
-        const basic_cli_object<coordT, charT>& set_background(const color& backg)
+        const basic_cli_object<coordT, charT, traits, Alloc>&
+            set_background(const color& backg)
         {
             background = backg;
             return *this;
@@ -262,7 +267,7 @@ namespace clitl {
             row = static_cast<coordT>(termout_sbufinfo.dwSize.Y);
             */
 
-            column = 80;
+            column = 110;
             row = 28;
 #endif
 
@@ -293,6 +298,16 @@ namespace clitl {
 #elif WIN32
             SetConsoleTextAttribute(termout_handle, termout_initial_sbufinfo.wAttributes);
 #endif
+            return *this;
+        }
+
+        basic_ostream<charT, traits, coordT>& draw
+            (const basic_cli_object<coordT, charT>& bco)
+        {
+            this->movecursor(bco.get_origin());
+            this->paintmode(bco.get_foreground(), bco.get_background());
+            *this << bco.get_string().c_str();
+
             return *this;
         }
 
@@ -411,9 +426,7 @@ namespace clitl {
         (basic_ostream<charT, traits, coordT>& os,
             const coloredstring<coordT, charT, traits, Alloc>& cs)
     {
-        os.movecursor(cs.get_origin());
-        os.paintmode(cs.get_foreground(), cs.get_background());
-        os << cs.get_string().c_str();
+        os.draw(cs);
         return os;
     }
 
@@ -421,9 +434,12 @@ namespace clitl {
     basic_ostream<charT, traits, coordT>& operator<<
         (basic_ostream<charT, traits, coordT>& os, const rect<coordT, charT, traits, Alloc>& re)
     {
+        static rect<coordT, charT, traits, Alloc> temprec;
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
-                os << coloredstring<coordT, charT, traits, Alloc>(re.get_origin(), re.get_string(), re.get_foreground(), re.get_background());
+                temprec = re;
+                temprec.set_origin(std::pair<coord_t, coord_t>(i, j));
+                os.draw(temprec);
             }
         }
         return os;
