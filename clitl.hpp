@@ -62,8 +62,8 @@ namespace clitl {
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(0, 0),
             const std::basic_string<charT, traits, Alloc>& str
                                             = std::basic_string<charT, traits, Alloc>(),
-            const color& foreground = color::WHITE,
-            const color& background = color::BLACK)
+            const color& foreground = color::DEFAULT,
+            const color& background = color::DEFAULT)
             : origin(origin), endpoint(endpoint), str(str),
                 foreground(foreground), background(background) {}
 
@@ -165,7 +165,7 @@ namespace clitl {
         explicit rect(
             const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
-            const color& background = color::WHITE)
+            const color& background = color::DEFAULT)
             : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
                 std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
     };
@@ -178,16 +178,16 @@ namespace clitl {
             const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
             const std::basic_string<charT, traits, Alloc>& str
             = std::basic_string<charT, traits, Alloc>(),
-            const color& foreground = clitl::color::WHITE,
-            const color& background = clitl::color::BLACK)
+            const color& foreground = clitl::color::DEFAULT,
+            const color& background = clitl::color::DEFAULT)
             : basic_cli_object<coordT, charT, traits, Alloc>(
                 origin, std::pair<coordT, coordT>(origin.first + str.length() - 1, origin.second),
                 str, foreground, background) {}
         explicit coloredstring(
             const std::basic_string<charT, traits, Alloc>& str
             = std::basic_string<charT, traits, Alloc>(),
-            const color& foreground = clitl::color::WHITE,
-            const color& background = clitl::color::BLACK)
+            const color& foreground = clitl::color::DEFAULT,
+            const color& background = clitl::color::DEFAULT)
             : basic_cli_object<coordT, charT, traits, Alloc>(
                 std::pair<coordT, coordT>(1, 1), std::pair<coordT, coordT>(1 + str.length() - 1, 1),
                 str, foreground, background) {}
