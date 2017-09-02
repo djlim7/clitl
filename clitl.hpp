@@ -193,9 +193,9 @@ namespace clitl {
                 str, foreground, background) {}
     };
 
-    /* Output buffer */
+    /* Stream buffer */
     template <typename charT, typename traits = std::char_traits<charT> >
-    class basic_outbuf : public std::basic_streambuf<charT, traits> {
+    class basic_streambuf : public std::basic_streambuf<charT, traits> {
     protected:
         virtual typename traits::int_type
             overflow(typename traits::int_type c)
@@ -207,8 +207,8 @@ namespace clitl {
         }
     };
 
-    typedef basic_outbuf<char> outbuf;
-    typedef basic_outbuf<wchar_t> woutbuf;
+    typedef basic_streambuf<char> streambuf;
+    typedef basic_streambuf<wchar_t> wstreambuf;
 
     /* Output stream */
     template <typename charT,
@@ -224,7 +224,7 @@ namespace clitl {
         CONSOLE_SCREEN_BUFFER_INFO termout_sbufinfo;
         CONSOLE_SCREEN_BUFFER_INFO termout_initial_sbufinfo;
 #endif
-        explicit basic_ostream(basic_outbuf<charT, traits>* sb)
+        explicit basic_ostream(basic_streambuf<charT, traits>* sb)
             : std::basic_ostream<charT, traits>(sb)
         {
 #ifdef UNIX
@@ -451,20 +451,20 @@ namespace clitl {
         return os;
     }
 
-    /* Input buffer */
-
     /* Input stream */
-    /* Keeping it for further update
-
     template <typename charT,
         typename traits = std::char_traits<charT>, typename coordT = coord_t >
-    class basic_istream : public std::basic_istream<charT, traits, coordT> {
-        
+    class basic_istream : public std::basic_istream<charT, traits> {
+    public:
+        explicit basic_istream(basic_streambuf<charT, traits>* sb)
+            : std::basic_istream<charT, traits>(sb)
+        {
+            
+        }
     };
 
     typedef basic_istream<char> istream;
     typedef basic_istream<wchar_t> wistream;
-    */
 }
 
 #endif
