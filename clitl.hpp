@@ -165,7 +165,7 @@ namespace clitl {
         explicit rect(
             const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
-            const color& background = color::DEFAULT)
+            const color& background = color::WHITE)
             : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
                 std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
     };
@@ -387,7 +387,7 @@ namespace clitl {
     basic_ostream<charT, traits, coordT>&
         refresh(basic_ostream<charT, traits, coordT>& os)
     {
-        std::fflush(stdout);
+        os << std::flush;
         return os;
     }
 
@@ -444,7 +444,7 @@ namespace clitl {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
                 temprec = re;
-                temprec.set_origin(std::pair<coord_t, coord_t>(i, j));
+                temprec.set_origin(std::pair<coordT, coordT>(i, j));
                 os.draw(temprec);
             }
         }
