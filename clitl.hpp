@@ -1,12 +1,12 @@
 #ifndef __CLITL_HPP__
 #define __CLITL_HPP__
 
+#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <locale>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <utility>
 
 #ifdef UNIX
@@ -196,14 +196,19 @@ namespace clitl {
     /* Stream buffer */
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_streambuf : public std::basic_streambuf<charT, traits> {
+        std::array<char, 128> buffer_storage;
     protected:
-        virtual typename traits::int_type
-            overflow(typename traits::int_type c)
+        virtual typename traits::int_type overflow(typename traits::int_type c)
         {
             if (std::putchar(c) == EOF) {
                 return traits::eof();
             }
             return traits::not_eof(c);
+        }
+
+        virtual typename traits::int_type underflow()
+        {
+            return traits::eof();
         }
     };
 
