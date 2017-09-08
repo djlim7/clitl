@@ -1,20 +1,20 @@
 #ifndef __CLITL_HPP__
 #define __CLITL_HPP__
 
-#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <locale>
 #include <ostream>
 #include <string>
 #include <utility>
+#include <iostream>
 
 #ifdef UNIX
 #include <sys/ioctl.h>
 #include <termios.h>
-#include <unistd.h>
 #elif WIN32
 #include <conio.h>
+#include <io.h>
 #include <Windows.h>
 #endif
 
@@ -196,9 +196,16 @@ namespace clitl {
     /* Stream buffer */
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_streambuf : public std::basic_streambuf<charT, traits> {
-        std::array<char, 128> buffer_storage;
     protected:
-        virtual typename traits::int_type overflow(typename traits::int_type c)
+        static const int buffer_size = 10;
+        char buffer[buffer_size];
+    public:
+        basic_streambuf()
+        {
+            setg(buffer, buffer, buffer);
+        }
+    protected:
+        typename traits::int_type overflow(typename traits::int_type c)
         {
             if (std::putchar(c) == EOF) {
                 return traits::eof();
@@ -206,9 +213,24 @@ namespace clitl {
             return traits::not_eof(c);
         }
 
-        virtual typename traits::int_type underflow()
+        typename traits::int_type underflow()
         {
-            return traits::eof();
+            std::cout << "UNDERFLOW CALLED\n";
+            if (gptr() < egptr()) {
+                return traits::to_int_type(*gptr());
+            }
+
+            if (_kbhit()) {
+                buffer[0] = _kbhit();
+            }
+            else {
+                buffer[0] = 'q';
+            }
+            buffer[1] = '\n';
+
+            setg(buffer, buffer, buffer + buffer_size);
+
+            return traits::to_int_type(*gptr());
         }
     };
 
