@@ -7,14 +7,12 @@
 #include <ostream>
 #include <string>
 #include <utility>
-#include <iostream>
 
 #ifdef UNIX
 #include <sys/ioctl.h>
 #include <termios.h>
 #elif WIN32
 #include <conio.h>
-#include <io.h>
 #include <Windows.h>
 #endif
 
@@ -197,7 +195,7 @@ namespace clitl {
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_streambuf : public std::basic_streambuf<charT, traits> {
     protected:
-        static const int buffer_size = 10;
+        static const int buffer_size = 2;
         char buffer[buffer_size];
     public:
         basic_streambuf()
@@ -207,7 +205,7 @@ namespace clitl {
     protected:
         typename traits::int_type overflow(typename traits::int_type c)
         {
-            if (std::putchar(c) == EOF) {
+            if (std::putchar(c) == traits::eof()) {
                 return traits::eof();
             }
             return traits::not_eof(c);
@@ -215,20 +213,26 @@ namespace clitl {
 
         typename traits::int_type underflow()
         {
-            std::cout << "UNDERFLOW CALLED\n";
+            static const int buffer_size_allocated = 2;
+
             if (gptr() < egptr()) {
                 return traits::to_int_type(*gptr());
             }
 
+#ifdef UNIX
+#elif WIN32
             if (_kbhit()) {
-                buffer[0] = _kbhit();
+                buffer[0] = static_cast<char>(_getch());
             }
             else {
-                buffer[0] = 'q';
+                buffer[0] = traits::eof();
             }
-            buffer[1] = '\n';
+#endif
+            if (buffer[1] != '\n') {
+                buffer[1] = '\n';
+            }
 
-            setg(buffer, buffer, buffer + buffer_size);
+            setg(buffer, buffer, buffer + buffer_size_allocated);
 
             return traits::to_int_type(*gptr());
         }
