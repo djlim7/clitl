@@ -6,13 +6,11 @@
 #include <locale>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <utility>
 
 #ifdef UNIX
 #include <sys/ioctl.h>
 #include <termios.h>
-#include <unistd.h>
 #elif WIN32
 #include <conio.h>
 #include <Windows.h>
@@ -165,7 +163,7 @@ namespace clitl {
         explicit rect(
             const std::pair<coordT, coordT>& origin = std::pair<coordT, coordT>(1, 1),
             const std::pair<coordT, coordT>& endpoint = std::pair<coordT, coordT>(1, 1),
-            const color& background = color::DEFAULT)
+            const color& background = color::WHITE)
             : basic_cli_object<coordT, charT, traits, Alloc>(origin, endpoint,
                 std::basic_string<charT, traits, Alloc>(" "), color::DEFAULT, background) {}
     };
@@ -193,22 +191,55 @@ namespace clitl {
                 str, foreground, background) {}
     };
 
-    /* Output buffer */
+    /* Stream buffer */
     template <typename charT, typename traits = std::char_traits<charT> >
-    class basic_outbuf : public std::basic_streambuf<charT, traits> {
+    class basic_streambuf : public std::basic_streambuf<charT, traits> {
     protected:
-        virtual typename traits::int_type
-            overflow(typename traits::int_type c)
+        static const int buffer_size = 2;
+        char buffer[buffer_size];
+    public:
+        basic_streambuf()
         {
-            if (std::putchar(c) == EOF) {
+            setg(buffer, buffer, buffer);
+        }
+    protected:
+        typename traits::int_type overflow(typename traits::int_type c)
+        {
+            if (std::putchar(c) == traits::eof()) {
                 return traits::eof();
             }
             return traits::not_eof(c);
         }
+
+        typename traits::int_type underflow()
+        {
+            static const int buffer_size_allocated = 2;
+
+            if (gptr() < egptr()) {
+                return traits::to_int_type(*gptr());
+            }
+
+#ifdef UNIX
+#elif WIN32
+            if (_kbhit()) {
+                buffer[0] = static_cast<char>(_getch());
+            }
+            else {
+                buffer[0] = traits::eof();
+            }
+#endif
+            if (buffer[1] != '\n') {
+                buffer[1] = '\n';
+            }
+
+            setg(buffer, buffer, buffer + buffer_size_allocated);
+
+            return traits::to_int_type(*gptr());
+        }
     };
 
-    typedef basic_outbuf<char> outbuf;
-    typedef basic_outbuf<wchar_t> woutbuf;
+    typedef basic_streambuf<char> streambuf;
+    typedef basic_streambuf<wchar_t> wstreambuf;
 
     /* Output stream */
     template <typename charT,
@@ -224,7 +255,7 @@ namespace clitl {
         CONSOLE_SCREEN_BUFFER_INFO termout_sbufinfo;
         CONSOLE_SCREEN_BUFFER_INFO termout_initial_sbufinfo;
 #endif
-        explicit basic_ostream(basic_outbuf<charT, traits>* sb)
+        explicit basic_ostream(basic_streambuf<charT, traits>* sb)
             : std::basic_ostream<charT, traits>(sb)
         {
 #ifdef UNIX
@@ -387,7 +418,7 @@ namespace clitl {
     basic_ostream<charT, traits, coordT>&
         refresh(basic_ostream<charT, traits, coordT>& os)
     {
-        std::fflush(stdout);
+        os << std::flush;
         return os;
     }
 
@@ -444,27 +475,27 @@ namespace clitl {
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
                 temprec = re;
-                temprec.set_origin(std::pair<coord_t, coord_t>(i, j));
+                temprec.set_origin(std::pair<coordT, coordT>(i, j));
                 os.draw(temprec);
             }
         }
         return os;
     }
 
-    /* Input buffer */
-
     /* Input stream */
-    /* Keeping it for further update
-
     template <typename charT,
         typename traits = std::char_traits<charT>, typename coordT = coord_t >
-    class basic_istream : public std::basic_istream<charT, traits, coordT> {
-        
+    class basic_istream : public std::basic_istream<charT, traits> {
+    public:
+        explicit basic_istream(basic_streambuf<charT, traits>* sb)
+            : std::basic_istream<charT, traits>(sb)
+        {
+            
+        }
     };
 
     typedef basic_istream<char> istream;
     typedef basic_istream<wchar_t> wistream;
-    */
 }
 
 #endif
