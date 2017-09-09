@@ -17,6 +17,8 @@ $ git submodule add https://github.com/pauis/clitl.git
 ```C++
 #include "clitl/clitl.hpp"
 
+#include <thread>
+
 int main()
 {
     clitl::streambuf obuf;
