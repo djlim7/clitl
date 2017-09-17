@@ -201,7 +201,7 @@ namespace clitl {
     public:
         basic_streambuf()
         {
-            setg(buffer, buffer, buffer);
+            this->setg(buffer, buffer, buffer);
         }
     protected:
         typename traits::int_type overflow(typename traits::int_type c)
@@ -216,13 +216,13 @@ namespace clitl {
         {
             static const int buffer_size_allocated = 2;
 
-            if (gptr() < egptr()) {
-                return traits::to_int_type(*gptr());
+            if (this->gptr() < this->egptr()) {
+                return traits::to_int_type(*(this->gptr()));
             }
 
 #ifdef UNIX
-            struct termios SIn::regulartset = { 0, };
-            struct termios SIn::newtset = { 0, };
+            struct termios regulartset = { 0, };
+            struct termios newtset = { 0, };
 
             tcgetattr(0, &regulartset); // Get current attribution
             newtset = regulartset; // Substitute
@@ -234,7 +234,7 @@ namespace clitl {
 
             buffer[0] = std::getchar();
 
-            tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
+            //tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
 #elif WIN32
             if (_kbhit()) {
                 buffer[0] = static_cast<char>(_getch());
@@ -247,9 +247,9 @@ namespace clitl {
                 buffer[1] = '\n';
             }
 
-            setg(buffer, buffer, buffer + buffer_size_allocated);
+            this->setg(buffer, buffer, buffer + buffer_size_allocated);
 
-            return traits::to_int_type(*gptr());
+            return traits::to_int_type(*(this->gptr()));
         }
     };
 
@@ -346,7 +346,7 @@ namespace clitl {
         {
             // Recovery mode
 #ifdef UNIX
-            os << "\033[0m";
+            *this << "\033[0m";
 #elif WIN32
             SetConsoleTextAttribute(termout_handle, termout_initial_sbufinfo.wAttributes);
 #endif
