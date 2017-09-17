@@ -11,6 +11,7 @@
 #ifdef UNIX
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <unistd.h>
 #elif WIN32
 #include <conio.h>
 #include <Windows.h>
@@ -220,6 +221,20 @@ namespace clitl {
             }
 
 #ifdef UNIX
+            struct termios SIn::regulartset = { 0, };
+            struct termios SIn::newtset = { 0, };
+
+            tcgetattr(0, &regulartset); // Get current attribution
+            newtset = regulartset; // Substitute
+            newtset.c_lflag &= ~ICANON; // Set noncanonical mode
+            newtset.c_lflag &= ~ECHO; // Turn off the echo
+            newtset.c_cc[VTIME] = 0; // Zero delay time
+            newtset.c_cc[VMIN] = 0; // Don't need any buffer delay
+            tcsetattr(0, TCSANOW, &newtset); // Apply new setting
+
+            buffer[0] = std::getchar();
+
+            tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
 #elif WIN32
             if (_kbhit()) {
                 buffer[0] = static_cast<char>(_getch());
