@@ -1,6 +1,4 @@
-﻿> Notice: This libaray is under development. Specific parts can be changed.
-
-# CLITL
+﻿# CLITL
 CLITL is a cross-platform C++ template library.
 
 ## Support

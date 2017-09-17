@@ -11,6 +11,7 @@
 #ifdef UNIX
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <unistd.h>
 #elif WIN32
 #include <conio.h>
 #include <Windows.h>
@@ -195,12 +196,29 @@ namespace clitl {
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_streambuf : public std::basic_streambuf<charT, traits> {
     protected:
+#ifdef UNIX
+        struct termios regulartset = { 0, };
+        struct termios newtset = { 0, };
+#endif
         static const int buffer_size = 2;
         char buffer[buffer_size];
     public:
         basic_streambuf()
         {
-            setg(buffer, buffer, buffer);
+#ifdef UNIX
+            tcgetattr(0, &regulartset); // Get current attribution
+            newtset = regulartset; // Substitute
+            newtset.c_lflag &= ~ICANON; // Set noncanonical mode
+            newtset.c_lflag &= ~ECHO; // Turn off the echo
+            newtset.c_cc[VTIME] = 0; // Zero delay time
+            newtset.c_cc[VMIN] = 0; // Don't need any buffer delay
+            tcsetattr(0, TCSANOW, &newtset); // Apply new setting
+#endif
+            this->setg(buffer, buffer, buffer);
+        }
+        ~basic_streambuf()
+        {
+            tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
         }
     protected:
         typename traits::int_type overflow(typename traits::int_type c)
@@ -215,11 +233,12 @@ namespace clitl {
         {
             static const int buffer_size_allocated = 2;
 
-            if (gptr() < egptr()) {
-                return traits::to_int_type(*gptr());
+            if (this->gptr() < this->egptr()) {
+                return traits::to_int_type(*(this->gptr()));
             }
 
 #ifdef UNIX
+            buffer[0] = std::getchar();
 #elif WIN32
             if (_kbhit()) {
                 buffer[0] = static_cast<char>(_getch());
@@ -232,9 +251,9 @@ namespace clitl {
                 buffer[1] = '\n';
             }
 
-            setg(buffer, buffer, buffer + buffer_size_allocated);
+            this->setg(buffer, buffer, buffer + buffer_size_allocated);
 
-            return traits::to_int_type(*gptr());
+            return traits::to_int_type(*(this->gptr()));
         }
     };
 
@@ -331,7 +350,7 @@ namespace clitl {
         {
             // Recovery mode
 #ifdef UNIX
-            os << "\033[0m";
+            *this << "\033[0m";
 #elif WIN32
             SetConsoleTextAttribute(termout_handle, termout_initial_sbufinfo.wAttributes);
 #endif
