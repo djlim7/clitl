@@ -407,6 +407,7 @@ namespace clitl {
         newtset.c_cc[VMIN] = 0; // Don't need any buffer delay
         tcsetattr(0, TCSANOW, &newtset); // Apply new setting
 #endif
+        return os;
     }
 
     template <typename charT, typename traits, typename coordT>
@@ -416,6 +417,7 @@ namespace clitl {
 #ifdef UNIX
         tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
 #endif
+        return os;
     }
 
     template <typename charT, typename traits, typename coordT>
@@ -499,9 +501,9 @@ namespace clitl {
 
     template <typename coordT, typename charT, typename traits, typename Alloc>
     basic_ostream<charT, traits, coordT>& operator<<
-        (basic_ostream<charT, traits, coordT>& os, const rect<coordT, charT, traits, Alloc>& re)
+        (basic_ostream<charT, traits, coordT>& os, const basic_cli_object<coordT, charT, traits, Alloc>& re)
     {
-        static rect<coordT, charT, traits, Alloc> temprec;
+        static basic_cli_object<coordT, charT, traits, Alloc> temprec;
         for (int i = re.get_origin().first; i <= re.get_endpoint().first; ++i) {
             for (int j = re.get_origin().second; j <= re.get_endpoint().second; ++j) {
                 temprec = re;
