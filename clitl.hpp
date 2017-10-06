@@ -196,29 +196,12 @@ namespace clitl {
     template <typename charT, typename traits = std::char_traits<charT> >
     class basic_streambuf : public std::basic_streambuf<charT, traits> {
     protected:
-#ifdef UNIX
-        struct termios regulartset = { 0, };
-        struct termios newtset = { 0, };
-#endif
         static const int buffer_size = 2;
         char buffer[buffer_size];
     public:
         basic_streambuf()
         {
-#ifdef UNIX
-            tcgetattr(0, &regulartset); // Get current attribution
-            newtset = regulartset; // Substitute
-            newtset.c_lflag &= ~ICANON; // Set noncanonical mode
-            newtset.c_lflag &= ~ECHO; // Turn off the echo
-            newtset.c_cc[VTIME] = 0; // Zero delay time
-            newtset.c_cc[VMIN] = 0; // Don't need any buffer delay
-            tcsetattr(0, TCSANOW, &newtset); // Apply new setting
-#endif
             this->setg(buffer, buffer, buffer);
-        }
-        ~basic_streambuf()
-        {
-            tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
         }
     protected:
         typename traits::int_type overflow(typename traits::int_type c)
@@ -267,6 +250,8 @@ namespace clitl {
     public:
 #ifdef UNIX
         struct winsize wsize;
+        struct termios regulartset = { 0, };
+        struct termios newtset = { 0, };
 #endif
 #ifdef WIN32
         HANDLE termout_handle;
@@ -411,6 +396,30 @@ namespace clitl {
 
     template <typename charT, typename traits, typename coordT>
     basic_ostream<charT, traits, coordT>&
+        disable_echo(basic_ostream<charT, traits, coordT>& os)
+    {
+#ifdef UNIX
+        tcgetattr(0, &regulartset); // Get current attribution
+        newtset = regulartset; // Substitute
+        newtset.c_lflag &= ~ICANON; // Set noncanonical mode
+        newtset.c_lflag &= ~ECHO; // Turn off the echo
+        newtset.c_cc[VTIME] = 0; // Zero delay time
+        newtset.c_cc[VMIN] = 0; // Don't need any buffer delay
+        tcsetattr(0, TCSANOW, &newtset); // Apply new setting
+#endif
+    }
+
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
+        enable_echo(basic_ostream<charT, traits, coordT>& os)
+    {
+#ifdef UNIX
+        tcsetattr(0, TCSANOW, &regulartset); // Apply the original setting
+#endif
+    }
+
+    template <typename charT, typename traits, typename coordT>
+    basic_ostream<charT, traits, coordT>&
         hide_cursor(basic_ostream<charT, traits, coordT>& os)
     {
 #ifdef UNIX
@@ -461,6 +470,7 @@ namespace clitl {
     {
         os << alternative_system_screenbuffer;
         os << hide_cursor;
+        os << disable_echo;
         os << clear;
         return os;
     }
@@ -471,6 +481,7 @@ namespace clitl {
     {
         os << clear;
         os << show_cursor;
+        os << enable_echo;
         os.movecursor(1, 1);
         os.paintmode(nullptr);
         os << normal_system_screenbuffer;
